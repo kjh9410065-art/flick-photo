@@ -27,10 +27,15 @@
 
 ## 배포 상태
 
-- 로컬 정적 소스 및 Git main 저장소 구성 완료.
-- 연결된 GitHub 계정은 kjh9410065-art. 제공된 GitHub 커넥터에는 새 저장소 생성 기능이 없고, 인앱 GitHub는 로그인 화면입니다. 로컬 Git 자격증명도 없어 원격 flick-photo 저장소는 생성·푸시하지 못했습니다.
-- 기존 Cloudflare OAuth 인증이 만료되었으며 Wrangler whoami의 인증 갱신도 실패했습니다. 인앱 Cloudflare 역시 로그인 화면입니다. Cloudflare Pages 프로젝트 생성·배포·photo.tcflick.com 도메인 연결은 수행하지 못했습니다.
-- 운영 주소에서 재검증하지 못했으므로 tcflick.com 여섯 번째 카드는 추가하지 않았습니다. 기존 다섯 서비스는 수정하지 않았습니다.
+- GitHub: https://github.com/kjh9410065-art/flick-photo (main), 소스 파일 업로드 완료.
+- Cloudflare Pages: flick-photo, GitHub main 자동 배포. 프레임워크 없음, 빌드 명령 없음, 출력 dist.
+- 운영 주소: https://photo.tcflick.com/ · 대체 주소: https://flick-photo.pages.dev/
+- Cloudflare 사용자 설정 도메인 활성 및 SSL 사용됨 확인.
+- 운영 주소에서 PNG/WebP 입력 → WebP 변환·품질 82·320×320 영역 맞춤 결과 320×200 확인. 개별 WebP 다운로드 후 파일 확보.
+- 최신 ZIP 흐름: 일괄 다운로드 버튼으로 ZIP 생성 → 명시적인 ZIP 파일 저장 링크. 운영 주소에서 JPEG 2개를 ZIP으로 저장하고 zipfile CRC 및 내부 이미지 디코딩 통과.
+- 운영 360px 화면의 문서 폭 345px: 가로 넘침 없음.
+- 홈, JS, 안내 5페이지, 정책 2페이지, robots.txt, sitemap.xml HTTP 200 확인. 운영 CSP connect-src 'none' 확인.
+- 브라우저 캐시에서 이전 코드가 남지 않도록 앱 모듈 URL 버전 적용.
+- 운영 검증 후 본사이트 index.html에 여섯 번째 카드 추가 (커밋 12e8be5). 기존 다섯 서비스 카드 HTML을 동일하게 보존하는 검사 통과.
+- 실제 iOS·Android 기기, Safari·Firefox 실기 검증은 미수행.
 - 광고 배치용 숨김 영역만 준비했습니다. AdSense 승인·슬롯 설정·광고 송출은 완료 상태가 아닙니다.
-
-배포 설정과 처리 제한은 README.md에 있습니다. 인증이 확보되면 원격 저장소 생성 → Pages 연결/배포 → 도메인·TLS 확인 → 운영 주소 기능 재검증 → 본사이트 카드 추가 순서로 진행합니다.

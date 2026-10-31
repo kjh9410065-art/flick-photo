@@ -6,6 +6,14 @@ TCFLiCK의 브라우저 전용 이미지 편집기. 이미지 파일을 전송�
 
 Node.js 20 이상에서 `npm start` 후 http://127.0.0.1:4173 을 엽니다. `npm run check`로 JavaScript 구문을 검사합니다. 안내 페이지 변경 후 `node scripts/docs.mjs`를 실행합니다. 빌드 없이 `dist`를 그대로 배포합니다.
 
+## 운영 주소
+
+- https://photo.tcflick.com/
+- https://flick-photo.pages.dev/
+- https://github.com/kjh9410065-art/flick-photo
+
+Cloudflare Pages에 GitHub main 자동 배포를 연결했습니다. 공식 도메인의 SSL 활성 및 변환·다운로드를 검증했습니다. 상세 범위는 VERIFICATION.md를 확인하세요.
+
 ## Cloudflare Pages
 
 - 프로젝트: flick-photo
