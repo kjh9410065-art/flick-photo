@@ -1,10 +1,10 @@
 {
   "name": "flick-photo",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node scripts/serve.mjs",
-    "check": "node --check dist/app.js && node --check dist/advanced-ui.js && node --check dist/engine.js && node --check dist/effects.js && node --check dist/assets.js && node --check dist/zip.js && node --test --test-isolation=none tests/*.test.mjs"
+    "check": "node --check dist/app.js && node --check dist/home-ui.js && node --check dist/advanced-ui.js && node --check dist/engine.js && node --check dist/effects.js && node --check dist/assets.js && node --check dist/zip.js && node --test --test-isolation=none tests/*.test.mjs"
   }
 }

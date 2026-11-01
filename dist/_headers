@@ -18,3 +18,6 @@
   Cache-Control: no-cache, must-revalidate
 /assets.js
   Cache-Control: no-cache, must-revalidate
+
+/home-ui.js
+  Cache-Control: no-cache, must-revalidate
