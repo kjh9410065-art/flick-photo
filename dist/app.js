@@ -23,9 +23,9 @@ function change(fn,message='편집 설정이 변경됐습니다. 내보내기에
 }
 function undo(redo=false){const i=active();if(!i||busy)return;const from=redo?i.future:i.history,to=redo?i.history:i.future;if(!from.length)return;to.push(clone(i.settings));i.settings=from.pop();discard(i);cropDraft=null;status(redo?'다시 실행했습니다.':'실행 취소했습니다.');refresh();}
 function reset(){const i=active();if(!i||busy)return;change(s=>Object.assign(s,defaults(i.w,i.h)),'모든 편집을 원본 설정으로 복원했습니다. 실행 취소로 되돌릴 수 있어요.');cropDraft=null;refresh();}
-function setTool(name){if(busy||!active())return;currentTool=name;cropDraft=null;comparing=false;if(name==='crop')cropDraft=clone(active().settings.crop||{x:0,y:0,w:active().w,h:active().h});panel(true);fitMode=true;refresh();}
+function setTool(name){if(busy||!active())return;currentTool=name;cropDraft=null;comparing=false;if(name==='crop')cropDraft=clone(active().settings.crop||{x:0,y:0,w:active().w,h:active().h});panel(true);fitMode=true;refresh();$('tool-settings').scrollTop=0;}
 function chooseItem(item){if(busy)return;activeId=item.id;cropDraft=null;if(currentTool==='crop')cropDraft=clone(item.settings.crop||{x:0,y:0,w:item.w,h:item.h});fitMode=true;refresh();}
-function removeItems(list){if(busy)return;for(const i of list){discard(i);URL.revokeObjectURL(i.url);items.splice(items.indexOf(i),1);}if(!active())activeId=items[0]?.id||null;if(!items.length){showHome();$('return-studio').hidden=true;previewVersion++;}else refresh();status('선택한 이미지를 제거했습니다.');}
+function removeItems(list){if(busy)return;for(const i of list){discard(i);URL.revokeObjectURL(i.url);items.splice(items.indexOf(i),1);}if(!active())activeId=items[0]?.id||null;if(!items.length){showHome();$('return-studio').hidden=true;previewVersion++;if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=null;$('preview-image').removeAttribute('src');$('before-image').removeAttribute('src');}else refresh();status('선택한 이미지를 제거했습니다.');}
 
 async function addFiles(files){
   if(busy)return;busy=true;const errors=[];let total=items.reduce((s,i)=>s+i.file.size,0);lockUI();

@@ -15,3 +15,6 @@ body.editing{overflow:hidden}.studio{height:100dvh;overflow:hidden;background:#0
 @media(max-width:640px){.filmstrip-heading>span{flex-shrink:0}#selection-count{display:none}.filmstrip-heading>div{gap:0}.filmstrip-heading .text-button{font-size:8px;padding-left:5px;padding-right:5px}.inspector{overflow:hidden}.tool-settings{overflow-y:auto;min-height:0;flex:1}}
 @media(max-width:350px){.hero h1{font-size:clamp(35px,12.5vw,43px);letter-spacing:-2.5px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+.compare-control span{white-space:nowrap;flex-shrink:0}.compare-control input{width:120px;flex:0 0 120px}
+@media(max-width:640px){.compare-control input{width:80px;flex-basis:80px}}
