@@ -1,1 +1,10 @@
-{"name":"flick-photo","version":"1.0.0","private":true,"type":"module","scripts":{"start":"node scripts/serve.mjs","check":"node --check dist/app.js && node --check dist/zip.js"}}
+{
+  "name": "flick-photo",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "check": "node --check dist/app.js && node --check dist/engine.js && node --check dist/zip.js && node --test --test-isolation=none tests/engine.test.mjs"
+  }
+}

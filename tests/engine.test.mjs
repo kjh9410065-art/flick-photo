@@ -1,0 +1,9 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {defaults,outputDimensions,clone} from '../dist/engine.js';
+const fixture=()=>({w:1600,h:900,settings:defaults(1600,900)});
+test('pixel resize fits inside bounds and respects rotation/crop',()=>{const i=fixture();Object.assign(i.settings,{resize:true,width:800,height:800});assert.deepEqual([outputDimensions(i).w,outputDimensions(i).h],[800,450]);i.settings.rotation=90;assert.deepEqual([outputDimensions(i).w,outputDimensions(i).h],[450,800]);i.settings.crop={x:100,y:100,w:600,h:600};assert.deepEqual([outputDimensions(i).w,outputDimensions(i).h],[800,800]);});
+test('percentage resize is based on crop and orientation',()=>{const i=fixture();Object.assign(i.settings,{resize:true,resizeMode:'percent',percent:25,rotation:90});assert.deepEqual([outputDimensions(i).w,outputDimensions(i).h],[225,400]);});
+test('unlocking aspect ratio produces exact requested dimensions',()=>{const i=fixture();Object.assign(i.settings,{resize:true,lock:false,width:500,height:500});assert.deepEqual([outputDimensions(i).w,outputDimensions(i).h],[500,500]);});
+test('invalid dimensions, crop bounds and oversized outputs are rejected',()=>{const i=fixture();i.settings.resize=true;i.settings.width=0;assert.throws(()=>outputDimensions(i),/정수/);i.settings.width=12000;i.settings.height=12000;i.settings.lock=false;assert.throws(()=>outputDimensions(i),/4천만/);i.settings.resize=false;i.settings.crop={x:1500,y:0,w:500,h:500};assert.throws(()=>outputDimensions(i),/자르기/);i.settings.crop=null;i.settings.resize=true;i.settings.resizeMode='percent';i.settings.percent=401;assert.throws(()=>outputDimensions(i),/비율/);});
+test('history snapshots do not mutate alongside current settings',()=>{const i=fixture();i.settings.crop={x:0,y:0,w:500,h:500};const snapshot=clone(i.settings);i.settings.crop.w=300;assert.equal(snapshot.crop.w,500);});
