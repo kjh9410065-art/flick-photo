@@ -29,4 +29,10 @@
 
 ## 배포
 
-운영 배포 및 운영 주소 재검증 결과는 배포 후 기록합니다.
+- GitHub main `8b82cb0f25914b81270b3fb46cc71a938fc089aa`에 구현 반영, 기존 Cloudflare Pages 자동 배포 완료.
+- https://photo.tcflick.com/ 운영 HTML에서 `/app.js?v=editor-3` 및 4개 그룹·신규 도구 표시 확인.
+- 운영 주소에서 실제 데모 사진1440×960에 노출·시네마틱·텍스트를 연속 적용하고 PNG 다운로드(1.91 MB) 후 실제 이미지에서 텍스트/보정 확인.
+- 운영에서 추가 JPG/PNG/WebP 입력 및 총3장 순차 처리, ZIP 다운로드·CRC 무결성·각 실제 이미지 형식과 치수 확인.
+- `/guides/color/` 운영 페이지의 신규 안내 및 관련 도구 안내 링크 확인. 운영 콘솔 오류/경고 없음.
+- 운영 화면 증거: `test-results/advanced/production-studio.png` (테스트 산출물은 Git에서 제외).
+- 다른 TCFLiCK 사이트·서비스는 수정하지 않았습니다.
