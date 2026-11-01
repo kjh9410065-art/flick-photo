@@ -20,4 +20,10 @@
 
 ## 운영 배포
 
-GitHub main 반영 후 운영 주소에서 재검증해 기록합니다. 다른 TCFLiCK 서비스는 수정하지 않았습니다.
+- 구현 커밋 c5a5573e62480b477e2e39886a9f74359af4c6a0을 기존 main에 반영하고 기존 Cloudflare Pages 자동 배포 완료.
+- https://photo.tcflick.com/ 에서 app.js?v=polish-1,16개 도구 카드, 기존 디자인 유지 확인.
+- ‘편집 시작하기’로 빈 스튜디오/이미지0장 확인. 텍스트 카드→파일3장 업로드→문구 추가→실제 PNG480×320 다운로드·원본과 픽셀 변경 확인.
+- 운영3장 순차 처리·ZIP 저장 및 CRC/PNG·JPEG 형식과480×320 치수 확인.
+- 운영 샘플 체험 시 별도 샘플1440×960 표시.280px에서 홈·파일 추가 버튼 노출, 비교 슬라이더 End 시 원본100% 클리핑 확인. 운영 콘솔 오류/경고 없음.
+- 증거 화면: test-results/polish/production-home.png 및 production-tools.png (Git 제외).
+- 다른 TCFLiCK 서비스는 수정하지 않았습니다.
