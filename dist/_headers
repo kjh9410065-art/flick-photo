@@ -11,3 +11,10 @@
   Cache-Control: no-cache, must-revalidate
 /style.css
   Cache-Control: no-cache, must-revalidate
+
+/advanced-ui.js
+  Cache-Control: no-cache, must-revalidate
+/effects.js
+  Cache-Control: no-cache, must-revalidate
+/assets.js
+  Cache-Control: no-cache, must-revalidate
