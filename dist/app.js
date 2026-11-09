@@ -59,7 +59,7 @@ function checkbox(labelText,id,checked,fn){const l=el('label',undefined,'check-f
 function selectField(labelText,id,options,value,fn){const l=el('label',labelText,'field'),s=el('select');s.id=id;for(const [v,t] of options){const o=el('option',t);o.value=v;s.append(o);}s.value=String(value);s.onchange=()=>fn(s.value);l.append(s);return l;}
 function action(text,fn,cls='button ghost full'){const b=el('button',text,cls);b.onclick=fn;return b;}
 const hint=text=>el('p',text,'small muted');
-function formatControl(){const s=active().settings;return selectField('출력 형식','format',[['image/jpeg','JPG · 사진에 적합'],['image/png','PNG · 무손실 / 투명'],['image/webp','WebP · 효율적인 웹 이미지']].filter(o=>formatSupport.includes(o[0])),s.mime,v=>change(s=>{s.mime=v;if(v==='image/png')s.targetBytes=0;}));}
+function formatControl(){const s=active().settings;return selectField('출력 형식','format',[['image/jpeg','JPG · 사진에 적합'],['image/png','PNG · 무손실 / 투명'],['image/webp','WebP · 효율적인 웹 이미지']].filter(o=>formatSupport.includes(o[0])),s.mime,v=>change(s=>{s.mime=v;}));}
 function qualityControl(){const item=active(),l=el('label','이미지 품질','field'),out=el('output',`${item.settings.quality}%`),input=el('input');out.id='quality-value';input.id='quality';input.type='range';input.min=1;input.max=100;input.value=item.settings.quality;input.disabled=item.settings.mime==='image/png'||Boolean(item.settings.targetBytes);let before=null;
   input.oninput=()=>{if(!before)before=clone(item.settings);item.settings.quality=Number(input.value);out.value=`${input.value}%`;discard(item);schedulePreview();updateStats();};input.onchange=()=>{if(before)historyPush(item,before);before=null;status('품질 설정을 바꿨습니다. 실제 용량은 처리 후 확인하세요.');refresh();};l.append(out,input);return l;}
 function formatNote(){const i=active();if(!formatSupport.includes(i.file.type))return hint('이 브라우저는 원본 형식 인코딩을 지원하지 않습니다. 지원되는 출력 형식을 선택하세요.');return hint(active().settings.mime==='image/png'?'PNG는 무손실 인코딩으로 품질 슬라이더를 적용하지 않습니다. 용량 감소를 보장하지 않습니다.':active().settings.mime==='image/jpeg'?'투명한 영역은 흰색으로 합성합니다. 낮은 품질에서는 이미지가 뭉개질 수 있어요.':'투명 배경을 유지합니다. 실제 용량은 이미지와 브라우저에 따라 달라져요.');}
@@ -90,14 +90,13 @@ function renderSettings(){const i=active();if(!i)return;const s=i.settings,t=too
       for (const target of targets) {
         const before=clone(target.settings);
         target.settings.mime=mime;
-        if (mime==='image/png') target.settings.targetBytes=0;
         historyPush(target,before);
         if (before.mime!==mime) discard(target);
       }
       refresh();
     }));
     p.append(hint(selected().map(item=>`${item.file.name} → ${item.settings.mime.split('/')[1]}`).join(' · ')||'선택한 이미지가 없습니다.'),action('실패한 선택 이미지만 재처리',()=>processItems(selected().filter(item=>item.error))));
-    p.append(hint('하단 썸네일의 체크박스로 처리할 이미지를 선택하세요.'),el('div',`${selected().length} / ${items.length}장 선택됨`,'tool-info'),action('현재 출력 설정을 선택 이미지에 적용',()=>{if(!confirm(`선택한 ${selected().length}장에 현재 출력 설정을 적용할까요? 완료 결과는 다시 처리해야 합니다.`))return;const from=clone(i.settings);for(const target of selected()){if(target===i)continue;const before=clone(target.settings);for(const key of ['mime','quality','targetBytes','allowShrink','resize','resizeMode','width','height','percent','lock'])target.settings[key]=from[key];historyPush(target,before);discard(target);}refresh();status('출력 설정을 선택 이미지에 적용했습니다. 자르기·회전·반전은 각 이미지의 설정을 유지합니다.');}),action('선택한 이미지 처리',()=>processItems(selected()),'button primary full'),action('처리 결과 ZIP 만들기',makeZip),hint('사진마다 자르기·회전·반전은 개별 적용됩니다. ZIP에는 선택한 사진 중 처리가 완료된 파일만 포함합니다.'));
+    p.append(hint('하단 썸네일의 체크박스로 처리할 이미지를 선택하세요.'),el('div',`${selected().length} / ${items.length}장 선택됨`,'tool-info'),action('현재 출력 설정을 선택 이미지에 적용',()=>{if(!confirm(`선택한 ${selected().length}장에 현재 출력 설정을 적용할까요? 완료 결과는 다시 처리해야 합니다.`))return;const from=clone(i.settings);for(const target of selected()){if(target===i)continue;const before=clone(target.settings);for(const key of ['mime','quality','targetBytes','targetUnit','allowShrink','resize','resizeMode','width','height','percent','lock'])target.settings[key]=from[key];historyPush(target,before);discard(target);}refresh();status('출력 설정을 선택 이미지에 적용했습니다. 자르기·회전·반전은 각 이미지의 설정을 유지합니다.');}),action('선택한 이미지 처리',()=>processItems(selected()),'button primary full'),action('처리 결과 ZIP 만들기',makeZip),hint('사진마다 자르기·회전·반전은 개별 적용됩니다. ZIP에는 선택한 사진 중 처리가 완료된 파일만 포함합니다.'));
   }
   advanced?.render(currentTool,p);
   if(!['restore','history'].includes(currentTool))p.append(el('div',undefined,'settings-divider'),action('원본 복원',reset),hint('Ctrl/⌘+Z 실행 취소 · Ctrl/⌘+Shift+Z 다시 실행'));
@@ -170,15 +169,20 @@ function compressionControls(item) {
       if (value === 'custom') document.getElementById('target-size').focus();
       else change(s => {s.targetBytes=Number(value);});
     });
-  let unit = 1024;
+  let unit = settings.targetUnit === 1048576 ? 1048576 : 1024;
   const amount = field('목표 용량', 'target-size', settings.targetBytes/unit, value => {
     if (value > 0 && value * unit <= 120 * 1048576) {document.getElementById('target-error').textContent='';change(s => {s.targetBytes=Math.max(1,Math.round(value*unit));});}
     else document.getElementById('target-error').textContent='0보다 크고 120 MB 이하인 용량을 입력하세요.';
-  }, {min:1,max:122880});
+  }, {min:1/unit,max:120*1048576/unit});
   amount.querySelector('input').step='any';
   const unitField = selectField('단위', 'target-unit', [[1024,'KB'],[1048576,'MB']],unit,value => {
     unit=Number(value);
-    document.getElementById('target-size').value=settings.targetBytes/unit;
+    settings.targetUnit=unit;
+    const input=document.getElementById('target-size');
+    input.value=settings.targetBytes/unit;
+    input.min=1/unit;
+    input.max=120*1048576/unit;
+    document.getElementById('target-error').textContent='';
   });
   const error = hint('');
   error.id='target-error';
@@ -259,12 +263,14 @@ const draftMessage = $('draft-message');
 async function updateDraftInfo() {
   try {
     const record = await readDraft();
-    draftMessage.textContent = record
+    const canRestore = record?.version === 1 && Array.isArray(record.items) && record.items.length > 0;
+    draftMessage.textContent = canRestore
       ? `${new Date(record.savedAt).toLocaleString('ko-KR')} · 이미지 ${record.items.length}장`
-      : '저장된 작업이 없습니다.';
+      : record ? '저장된 작업을 읽을 수 없습니다. 삭제하거나 새 작업으로 교체할 수 있습니다.' : '저장된 작업이 없습니다.';
     for (const id of ['draft-save','draft-load','draft-delete','draft-clear']) {
-      $(id).dataset.unavailable = String(['draft-load','draft-delete'].includes(id) && !record);
-      $(id).disabled = busy || (['draft-load','draft-delete'].includes(id) && !record);
+      const unavailable = id === 'draft-load' ? !canRestore : id === 'draft-delete' && !record;
+      $(id).dataset.unavailable = String(unavailable);
+      $(id).disabled = busy || unavailable;
     }
   } catch {
     draftMessage.textContent = '이 브라우저에서는 로컬 저장소를 사용할 수 없습니다.';

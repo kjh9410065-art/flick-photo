@@ -5,7 +5,7 @@ import {assetInfo} from './assets.js?v=3.3';
 export const MAX_PIXELS=40_000_000, ADVANCED_PIXELS=16_000_000;
 export const clone=value=>JSON.parse(JSON.stringify(value));
 export const frameDefaults=()=>({background:'transparent',padding:0,border:0,borderColor:'#ffffff',radius:0,circle:false});
-export const defaults=(w,h,mime='image/jpeg')=>({mime,quality:82,targetBytes:0,allowShrink:false,resize:false,resizeMode:'pixels',width:w,height:h,percent:100,lock:true,crop:null,rotation:0,flipX:false,flipY:false,adjust:{...ADJUSTMENTS},filter:'none',filterIntensity:100,sharpness:0,blur:0,frame:frameDefaults(),layers:[],regions:[],rename:''});
+export const defaults=(w,h,mime='image/jpeg')=>({mime,quality:82,targetBytes:0,targetUnit:1024,allowShrink:false,resize:false,resizeMode:'pixels',width:w,height:h,percent:100,lock:true,crop:null,rotation:0,flipX:false,flipY:false,adjust:{...ADJUSTMENTS},filter:'none',filterIntensity:100,sharpness:0,blur:0,frame:frameDefaults(),layers:[],regions:[],rename:''});
 export function hasAdvanced(s){const f={...frameDefaults(),...s.frame};return Object.values(s.adjust||{}).some(Boolean)||(s.filter&&s.filter!=='none'&&s.filterIntensity!==0)||s.sharpness||s.blur||s.layers?.length||s.regions?.length||f.padding||f.border||f.radius||f.circle||f.background!=='transparent';}
 export function outputDimensions(item,s=item.settings){
   const c=s.crop||{x:0,y:0,w:item.w,h:item.h};
