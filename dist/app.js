@@ -331,5 +331,6 @@ $('draft-delete').onclick = () => runDraft(async () => {
 $('draft-clear').onclick = () => runDraft(async () => {
   if (confirm('저장된 작업과 사용자 프리셋을 모두 삭제할까요?')) {
     await draftOperation('readwrite', store => store.clear());
+    if (currentTool === 'resize' && active()) renderSettings();
   }
 });

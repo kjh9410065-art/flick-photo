@@ -122,7 +122,9 @@ try {
     const attainable=await output();
     update('#target-size',1/1024,'input');
     const impossible=await output();
-    return {attainable,impossible};
+    q('#target-shrink').click();
+    const shrunk=await output();
+    return {attainable,impossible,shrunk};
   });
   assert.equal(webp.attainable[0],'image/webp');
   assert.ok(webp.attainable[1]<=102400);
@@ -130,6 +132,8 @@ try {
   assert.ok(webp.impossible[1]>1);
   assert.deepEqual(webp.impossible.slice(2,4),[result.width,result.height]);
   assert.match(webp.impossible[4],/미달성/);
+  assert.ok(webp.shrunk[2]<result.width&&webp.shrunk[3]<result.height);
+  assert.ok(Math.abs(webp.shrunk[2]/webp.shrunk[3]-result.width/result.height)<.1);
   const downloadDir=await mkdtemp(join(tmpdir(),'flick-photo-download-'));
   await call('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:downloadDir});
   const edited=await evaluate(async()=>{
@@ -269,6 +273,16 @@ try {
       await new Promise(r=>setTimeout(r,20));
     }
     await wait(()=>!q('#draft-clear').disabled);
+    q('.saved-presets').open=true;
+    await wait(()=>q('#saved-preset')?.options.length===1);
+    q('.saved-presets').open=false;
+    await new Promise(r=>setTimeout(r,40));
+    const openDatabase=indexedDB.open;
+    try {
+      indexedDB.open=()=>{throw new DOMException('Test storage restriction','SecurityError');};
+      q('.saved-presets').open=true;
+      await wait(()=>q('.saved-presets').textContent.includes('브라우저 저장소를 사용할 수 없습니다.'));
+    } finally {indexedDB.open=openDatabase;}
     tool('regions');button('모자이크 영역 추가');
     const mosaic=await output();
     if(mosaic.pixels===out[1].pixels)throw Error('Mosaic did not affect pixels');
@@ -277,10 +291,16 @@ try {
     tool('frame');input('#frame-padding',6);input('#frame-border',2);q('#frame-circle').click();
     const frame=await output();
     if(frame.w!==80||frame.h!==80||!frame.transparent)throw Error('Circular frame output mismatch');
+    q('#frame-transparent').click();
+    if((await output()).transparent!==0)throw Error('Opaque frame background did not render');
     q('#batch-process').click();
     await wait(()=>q('#status').textContent.includes('성공 3장'));
     q('#make-zip').click();
     await wait(()=>!q('#zip-download').hidden);
+    const previousZip=q('#zip-download').href;
+    q('#make-zip').click();
+    await wait(()=>!q('#zip-download').hidden);
+    if(window.qaBlobs.has(previousZip)||q('#zip-download').href===previousZip)throw Error('Old ZIP URL retained');
     q('#zip-download').click();
     tool('collage');input('#collage-width',80);input('#collage-height',64);input('#collage-gap',4);
     button('3장 합치기');
@@ -351,6 +371,23 @@ try {
   await call('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:touch.endX,y:touch.endY}]});
   await call('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   assert.equal(await evaluate(()=>Boolean(document.querySelector('[data-object-kind="region"]'))),true,'touch region');
+  const mobilePanel=await evaluate(async()=>{
+    const q=s=>document.querySelector(s);
+    q('.tool-button[data-tool="filters"]').click();
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+    const nodes=[q('#inspector'),q('#tool-settings')];
+    const scroller=nodes.find(node=>node.scrollHeight>node.clientHeight+5&&['auto','scroll'].includes(getComputedStyle(node).overflowY));
+    if(!scroller)return false;
+    scroller.scrollTop=80;
+    if(scroller.scrollTop<=0)return false;
+    q('#close-panel').click();
+    q('#draft-panel').open=true;
+    const save=q('#draft-save');
+    const r=save.getBoundingClientRect();
+    const hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
+    return !save.disabled&&save.contains(hit);
+  });
+  assert.equal(mobilePanel,true,'mobile settings scroll and save hit target');
   await call('Emulation.setDeviceMetricsOverride',{width:844,height:390,deviceScaleFactor:1,mobile:true,screenOrientation:{type:'landscapePrimary',angle:90}});
   assert.equal(await evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'landscape overflow');
   assert.deepEqual(errors,[]);
