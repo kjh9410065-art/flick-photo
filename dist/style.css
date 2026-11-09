@@ -61,3 +61,11 @@ body.editing{overflow:hidden}.studio{height:100dvh;overflow:hidden;background:#0
 @media(max-width:350px){.directory-card{min-height:164px}}
 .studio-tag{font-size:11px;letter-spacing:1px;color:#b2c6e0}.demo-title>span:nth-child(2){min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}.floating-panel>div{flex:1;min-width:0}.preview-entry{flex-shrink:0;white-space:nowrap;min-width:98px}
 @media(max-width:640px){.hero-visual .demo-title>span:nth-child(2){font-size:11px}.hero-visual .demo-badge{font-size:11px}.hero-visual .window-dots{display:none}.preview-entry{padding:8px 10px}}
+
+.draft-panel{position:relative;flex:none;color:#dce8ff;font-size:14px}
+.draft-panel summary{cursor:pointer;padding:8px 4px;min-height:40px;display:flex;align-items:center}
+.draft-panel[open]>div{position:fixed;top:60px;left:12px;z-index:60;width:min(360px,calc(100vw - 24px));max-height:calc(100dvh - 75px);overflow:auto;background:#192336;border:1px solid #607ba0;border-radius:10px;padding:16px}
+.draft-panel button{display:block;width:100%;margin-top:8px}
+.result-stats>div{min-width:0;overflow-wrap:anywhere}
+.result-stats>div>strong{font-size:13px}
+@media(max-width:640px){.draft-panel summary{font-size:12px;width:46px;line-height:1.2}.result-stats{display:block}.result-stats>div{margin-bottom:4px}}
