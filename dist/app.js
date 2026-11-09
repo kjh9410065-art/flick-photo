@@ -309,7 +309,7 @@ $('draft-load').onclick = () => runDraft(async () => {
       await loadImage(url);
       for (const settings of [item.settings,...item.history,...item.future]) settings.mime = outputMime(settings.mime);
     }
-    restoreAssets(record.assets || []);
+    await restoreAssets(record.assets || [], restored);
   } catch (error) {
     restored.forEach(item => URL.revokeObjectURL(item.url));
     throw error;

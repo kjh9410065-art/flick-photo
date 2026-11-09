@@ -19,10 +19,30 @@ export function draftAssets(items) {
     return {id, blob, w, h, name, bytes};
   });
 }
-export function restoreAssets(records) {
-  for (const record of records) {
-    const previous = assets.get(record.id);
+export async function restoreAssets(records, items) {
+  const required = new Set(items.flatMap(item => [item.settings, ...item.history, ...item.future]
+    .flatMap(settings => (settings.layers || []).filter(layer => layer.type === 'image').map(layer => layer.assetId))));
+  const staged = new Map();
+  try {
+    for (const record of records) {
+      if (!required.has(record.id) || staged.has(record.id)) continue;
+      const url = URL.createObjectURL(record.blob);
+      staged.set(record.id, {...record, url});
+      const bitmap = await createImageBitmap(record.blob);
+      try {
+        if (bitmap.width !== record.w || bitmap.height !== record.h) throw Error('저장된 로고 크기가 올바르지 않습니다.');
+      } finally {
+        bitmap.close();
+      }
+    }
+    if (staged.size !== required.size) throw Error('저장된 작업의 로고가 누락되었습니다.');
+  } catch (error) {
+    for (const asset of staged.values()) URL.revokeObjectURL(asset.url);
+    throw error;
+  }
+  for (const [id, asset] of staged) {
+    const previous = assets.get(id);
     if (previous) URL.revokeObjectURL(previous.url);
-    assets.set(record.id, {...record, url: URL.createObjectURL(record.blob)});
+    assets.set(id, asset);
   }
 }
