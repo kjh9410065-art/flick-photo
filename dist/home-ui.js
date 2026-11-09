@@ -1,4 +1,4 @@
-import {defaults,loadImage,renderImage} from './engine.js?v=editor-3';
+import {defaults,loadImage,renderImage} from './engine.js?v=3.3';
 
 export function setupHome({icon,groups}){
   const descriptions={convert:['이미지 형식 변환','JPG·PNG·WebP, 쓰임에 맞게'],compress:['이미지 압축','품질과 실제 용량을 함께 확인'],resize:['크기 조절','픽셀·비율·소셜 규격으로'],crop:['자르기','자유 영역과 고정 비율 선택'],rotate:['회전 및 반전','90° 회전과 좌우·상하 반전'],adjust:['색상 보정','밝기·대비·채도와 노출 조절'],filters:['사진 필터','일곱 가지 필터와 강도 조절'],detail:['선명도 및 흐림','선명하게, 또는 부드럽게'],text:['텍스트 추가','문구·글꼴·위치 자유롭게'],watermark:['워터마크','텍스트·로고를 여러 장에'],frame:['테두리 및 배경','여백·배경색·둥근 모서리'],regions:['모자이크','선택 영역 모자이크와 흐림'],collage:['이미지 합치기','가로·세로 콜라주 만들기'],batch:['일괄 처리','선택한 사진을 한 장씩 처리'],export:['개별 다운로드','결과 확인 후 내 기기에 저장'],zip:['ZIP 다운로드','완료된 결과를 한 번에 묶기']};

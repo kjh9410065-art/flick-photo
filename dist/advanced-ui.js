@@ -1,6 +1,6 @@
 import {FILTERS,ADJUSTMENTS,clamp} from './effects.js?v=editor-3';
-import {defaults,clone,frameDefaults,outputDimensions,layerBox,renderImage,composeImages,outputName} from './engine.js?v=editor-3';
-import {addAsset,assetInfo,pruneAssets} from './assets.js?v=editor-3';
+import {defaults,clone,frameDefaults,outputDimensions,layerBox,renderImage,composeImages,outputName} from './engine.js?v=3.3';
+import {addAsset,assetInfo,pruneAssets} from './assets.js?v=3.3';
 
 export function setupAdvanced(api){
   const {el,field,checkbox,selectField,action,hint,active,change,notice}=api;
@@ -34,7 +34,23 @@ export function setupAdvanced(api){
     p.append(controlRange('투명도 (%)','layer-opacity',l.opacity,0,100,1,(v,s)=>{const t=s.layers.find(t=>t.id===selectedLayer);if(t)t.opacity=v;},100),field('회전 (°)','layer-rotation',l.rotation,v=>setLayer(l=>l.rotation=v),{min:-180,max:180}),row(field('가로 위치 (%)','layer-x',Math.round(l.x*100),v=>setLayer(l=>l.x=clamp(v/100,0,1)),{min:0,max:100}),field('세로 위치 (%)','layer-y',Math.round(l.y*100),v=>setLayer(l=>l.y=clamp(v/100,0,1)),{min:0,max:100})),checkbox('이 레이어를 일괄 워터마크에 포함','layer-watermark',!!l.watermark,v=>setLayer(l=>l.watermark=v)),action('선택 레이어 삭제',()=>{const id=selectedLayer;change(s=>s.layers=s.layers.filter(l=>l.id!==id));selectedLayer=null;api.refresh();}),hint('캔버스에서 드래그해 이동합니다. 모서리 핸들로 크기를, 위쪽 핸들로 회전을 조절할 수 있습니다. 방향키는 1px, Shift+방향키는 10px 이동합니다.'));
   }
   function watermarkBatch(){const from=active(),layers=from.settings.layers.filter(l=>l.watermark);if(!layers.length){notice('일괄 적용할 텍스트 또는 로고 워터마크를 먼저 추가하세요.');return;}try{const source=outputDimensions(from);for(const target of api.selected()){if(target===from)continue;const d=outputDimensions(target),before=clone(target.settings);const copies=layers.map(l=>{const copy=clone(l);copy.id=crypto.randomUUID();if(copy.type==='text')copy.fontSize=Math.max(6,Math.min(2000,copy.fontSize*d.w/source.w));else{const a=assetInfo(copy.assetId);copy.h=copy.w*d.w/d.h*a.h/a.w;}return copy;});if(target.settings.layers.filter(l=>!l.watermark).length+copies.length>20)throw Error('한 이미지의 레이어가 20개를 넘습니다. 레이어를 줄여 주세요.');target.settings.layers=[...target.settings.layers.filter(l=>!l.watermark),...copies];api.historyPush(target,before);api.discard(target);}api.refresh();api.status('선택 이미지에 워터마크를 적용했습니다. 위치와 크기는 각 출력 크기에 맞춥니다. 선택 처리 후 다운로드하세요.');}catch(e){notice(e.message);}}
-  function socialPreset(name){const presets={youtube:[1280,720],shorts:[1080,1920],instagram:[1080,1080],portrait:[1080,1350],story:[1080,1920]};const pair=presets[name];if(!pair)return;change(s=>{const i=active(),c=s.crop||{x:0,y:0,w:i.w,h:i.h},ratio=s.rotation%180?pair[1]/pair[0]:pair[0]/pair[1];let w=c.w,h=c.h;if(w/h>ratio)w=Math.round(h*ratio);else h=Math.round(w/ratio);s.crop={x:c.x+Math.floor((c.w-w)/2),y:c.y+Math.floor((c.h-h)/2),w:Math.max(1,w),h:Math.max(1,h)};Object.assign(s,{resize:true,resizeMode:'pixels',width:pair[0],height:pair[1],lock:false});},'중앙 비율 자르기와 출력 규격을 적용했습니다. 자르기 도구에서 영역을 수정할 수 있어요.');}
+  const presets = {
+    photo:[2400,2400,'image/jpeg'],blog:[1600,1600,'image/webp'],shop:[1600,1600,'image/jpeg'],
+    profile:[800,800,'image/png'],youtube:[1280,720,'image/jpeg'],instagram:[1080,1080,'image/jpeg'],
+    portrait:[1080,1350,'image/jpeg'],vertical:[1080,1920,'image/jpeg']
+  };
+  function socialPreset(name) {
+    const preset = presets[name];
+    if (!preset) return;
+    const [width,height,mime] = preset;
+    // A preset bounds the output without changing the existing crop.
+    const current = outputDimensions(active());
+    const scale = Math.min(1,width/current.contentW,height/current.contentH);
+    change(s => Object.assign(s,{resize:true,resizeMode:'pixels',
+      width:Math.max(1,Math.round(current.contentW*scale)),height:Math.max(1,Math.round(current.contentH*scale)),
+      lock:true,mime:api.outputMime(mime),targetBytes:0}));
+  }
+
   async function filterThumbs(host){const item=active(),token=++thumbVersion,base=clone(item.settings);base.filter='none';base.filterIntensity=0;base.layers=[];base.regions=[];base.frame=frameDefaults();const key=item.id+JSON.stringify(base);
     if(thumbCache?.key===key){for(const img of host.querySelectorAll('img'))img.src=thumbCache.urls[img.dataset.filter];return;}
     try{const r=await renderImage({...item,settings:base},{preview:true,maxEdge:220});if(token!==thumbVersion)return;const source=URL.createObjectURL(r.blob),smallW=Math.max(1,Math.round(r.w*Math.min(1,220/Math.max(r.w,r.h)))),smallH=Math.max(1,Math.round(r.h*Math.min(1,220/Math.max(r.w,r.h)))),urls={};
@@ -43,7 +59,12 @@ export function setupAdvanced(api){
     }catch(e){if(token===thumbVersion){const note=el('p',`썸네일을 만들 수 없습니다. ${e.message}`,'small muted');host.after(note);}}
   }
   function render(tool,p){ensure();const s=settings();if(!s)return;
-    if(tool==='resize'){const label=selectField('빠른 출력 규격','social-preset',[['custom','사용자 지정'],['youtube','유튜브 썸네일 · 1280×720'],['shorts','유튜브 쇼츠 · 1080×1920'],['instagram','인스타 게시물 · 1080×1080'],['portrait','인스타 세로 게시물 · 1080×1350'],['story','인스타 스토리 · 1080×1920']],'custom',socialPreset);p.prepend(label,hint('규격 선택 시 중앙을 비율에 맞춰 자른 뒤 정확한 크기로 출력합니다.'));
+    if (tool==='resize') {
+      p.prepend(selectField('용도별 출력 규격','social-preset',[
+        ['custom','사용자 직접 설정'],['photo','일반 사진 편집'],['blog','블로그 이미지'],['shop','쇼핑몰 상품 사진'],
+        ['profile','정사각형 프로필'],['youtube','유튜브 썸네일'],['instagram','인스타그램 정사각형'],
+        ['portrait','인스타그램 세로 이미지'],['vertical','세로형 영상 썸네일']
+      ],'custom',socialPreset),hint('맞춤은 크기와 출력 형식만 바꾸며 비율과 기존 자르기를 유지합니다. 화면을 채우려면 자르기 도구에서 직접 영역을 지정하세요. 확대해도 원본 화질은 개선되지 않습니다.'));
     }
     if(tool==='rotate')p.append(action(`${s.flipX?'✓ ':''}↔ 좌우 반전`,()=>change(s=>s.flipX=!s.flipX)),action(`${s.flipY?'✓ ':''}↕ 상하 반전`,()=>change(s=>s.flipY=!s.flipY)));
     if(tool==='adjust'){

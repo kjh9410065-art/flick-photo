@@ -1,10 +1,11 @@
 // Every preview/export uses this exact, ordered browser-local pipeline.
 import {ADJUSTMENTS,clamp,correctCanvas,sharpenCanvas,boxBlur} from './effects.js?v=editor-3';
-import {assetInfo} from './assets.js?v=editor-3';
+import {findTarget} from './compression.js?v=3.3';
+import {assetInfo} from './assets.js?v=3.3';
 export const MAX_PIXELS=40_000_000, ADVANCED_PIXELS=16_000_000;
 export const clone=value=>JSON.parse(JSON.stringify(value));
 export const frameDefaults=()=>({background:'transparent',padding:0,border:0,borderColor:'#ffffff',radius:0,circle:false});
-export const defaults=(w,h)=>({mime:'image/jpeg',quality:82,resize:false,resizeMode:'pixels',width:w,height:h,percent:100,lock:true,crop:null,rotation:0,flipX:false,flipY:false,adjust:{...ADJUSTMENTS},filter:'none',filterIntensity:100,sharpness:0,blur:0,frame:frameDefaults(),layers:[],regions:[],rename:''});
+export const defaults=(w,h,mime='image/jpeg')=>({mime,quality:82,targetBytes:0,targetUnit:1024,allowShrink:false,resize:false,resizeMode:'pixels',width:w,height:h,percent:100,lock:true,crop:null,rotation:0,flipX:false,flipY:false,adjust:{...ADJUSTMENTS},filter:'none',filterIntensity:100,sharpness:0,blur:0,frame:frameDefaults(),layers:[],regions:[],rename:''});
 export function hasAdvanced(s){const f={...frameDefaults(),...s.frame};return Object.values(s.adjust||{}).some(Boolean)||(s.filter&&s.filter!=='none'&&s.filterIntensity!==0)||s.sharpness||s.blur||s.layers?.length||s.regions?.length||f.padding||f.border||f.radius||f.circle||f.background!=='transparent';}
 export function outputDimensions(item,s=item.settings){
   const c=s.crop||{x:0,y:0,w:item.w,h:item.h};
@@ -50,7 +51,45 @@ export async function renderCanvas(item,{preview=false,maxEdge=1400}={}){
     await regionsOn(output,s.regions,scale);await layersOn(output,s.layers,dims,scale);return {canvas:output,w:dims.w,h:dims.h,scale};
   }catch(e){release(base);if(output!==base)release(output);throw e;}
 }
-export async function renderImage(item,options={}){const s=item.settings,r=await renderCanvas(item,options);let canvas=r.canvas;try{if(s.mime==='image/jpeg'){const flat=surface(canvas.width,canvas.height),ctx=context(flat);ctx.fillStyle='#fff';ctx.fillRect(0,0,flat.width,flat.height);ctx.drawImage(canvas,0,0);release(canvas);canvas=flat;}const blob=await new Promise(resolve=>canvas.toBlob(resolve,s.mime,s.quality/100));if(!blob)throw Error('이미지 생성에 실패했습니다. 크기나 사진 수를 줄여 주세요.');if(blob.type!==s.mime)throw Error('이 브라우저는 해당 출력 형식을 지원하지 않습니다. JPG 또는 PNG를 선택하세요.');return {blob,w:r.w,h:r.h};}finally{release(canvas);}}
+export async function renderImage(item, options = {}) {
+  const settings = item.settings;
+  const rendered = await renderCanvas(item, options);
+  let canvas = rendered.canvas;
+  try {
+    if (settings.mime === 'image/jpeg') {
+      const flat = surface(canvas.width, canvas.height);
+      const ctx = context(flat);
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, flat.width, flat.height);
+      ctx.drawImage(canvas, 0, 0);
+      release(canvas);
+      canvas = flat;
+    }
+    const encode = async quality => {
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, settings.mime, quality / 100));
+      if (!blob || blob.type !== settings.mime) throw Error('이 출력 형식으로 저장할 수 없습니다.');
+      return blob;
+    };
+    if (options.preview || !settings.targetBytes || settings.mime === 'image/png') {
+      return {blob: await encode(settings.quality), w: rendered.w, h: rendered.h,
+        quality: settings.mime === 'image/png' ? null : settings.quality};
+    }
+    const deadline = Date.now() + 6000;
+    let result = await findTarget(encode, settings.targetBytes, options.progress, deadline);
+    // Resize the rendered result only with explicit permission, at most twice.
+    for (let attempt = 0; settings.allowShrink && !result.met && attempt < 2 && Date.now() < deadline; attempt++) {
+      const factor = Math.max(.2, Math.min(.85, Math.sqrt(settings.targetBytes / result.blob.size) * .9));
+      const smaller = surface(canvas.width * factor, canvas.height * factor);
+      context(smaller).drawImage(canvas, 0, 0, smaller.width, smaller.height);
+      release(canvas);
+      canvas = smaller;
+      result = await findTarget(encode, settings.targetBytes, options.progress, deadline);
+    }
+    return {...result, w: canvas.width, h: canvas.height};
+  } finally {
+    release(canvas);
+  }
+}
 export async function supportedFormats(){const canvas=surface(1,1),result=[];for(const mime of ['image/jpeg','image/png','image/webp']){const blob=await new Promise(r=>canvas.toBlob(r,mime,.8));if(blob?.type===mime)result.push(mime);}release(canvas);return result;}
 export function outputName(item,index){const ext=item.settings.mime.split('/')[1].replace('jpeg','jpg'),custom=String(item.settings.rename||'').trim(),base=(custom||item.file.name.replace(/\.[^.]+$/,'')).replace(/[\\/:*?"<>|\x00-\x1f]/g,'_').slice(0,100)||'image';return `${base}${custom?`-${String(index+1).padStart(2,'0')}`:`-flick-${index+1}`}.${ext}`;}
 export async function composeImages(items,{direction='horizontal',cellWidth=640,cellHeight=640,gap=12,background='#ffffff',fit='contain'}={}){
