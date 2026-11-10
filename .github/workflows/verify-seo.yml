@@ -1,0 +1,56 @@
+name: Verify FLiCK Photo Korean SEO and existing editor
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "dist/index.html"
+      - "dist/guides/**"
+      - "dist/privacy/**"
+      - "dist/terms/**"
+      - "dist/sitemap.xml"
+      - "dist/robots.txt"
+      - "dist/_headers"
+      - "scripts/docs.mjs"
+      - "scripts/verify-live-seo.mjs"
+      - "tests/**"
+      - "package.json"
+      - ".github/workflows/verify-seo.yml"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: flick-photo-seo-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-seo:
+    name: Editor tests, Korean SEO, generated docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate photo editor + 13 indexable URLs
+        run: npm run check
+      - name: Validate generated guide and sitemap parity
+        run: |
+          node scripts/docs.mjs
+          git diff --exit-code -- dist/guides dist/privacy dist/terms dist/sitemap.xml
+
+  live-indexability:
+    name: Production domain status and search preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check public DNS, HTTP and deployed Korean homepage
+        run: node scripts/verify-live-seo.mjs
